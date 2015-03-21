@@ -4,7 +4,7 @@ function initialize() {
   var mapOptions = {
     center: new google.maps.LatLng(51.510888, -0.117935),
     zoom: 16,
-    mapTypeId: google.maps.MapTypeId.SATELLITE
+    mapTypeId: google.maps.MapTypeId.ROADMAP
   };
   var gradient = [
     'rgba(0, 255, 255, 0)',
