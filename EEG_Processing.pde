@@ -45,14 +45,9 @@ class EEG_Processing_User {
 
     //OR, you could loop over each EEG channel and do some sort of frequency-domain processing from the FFT data
     float FFT_freq_Hz, FFT_value_uV;
-//  final int alpha_left_first = 5;
-//  final int alpha_right_first = 2;
-//  final int alpha_left_second = 7;
-//  final int alpha_right_second = 6;
 
     float temp_l, temp_r;
-    // float[][] arr = {};
-    ArrayList<float[]> arr = new ArrayList<float[]>();
+    ArrayList<float[]> list = new ArrayList<float[]>();
 
     for (int Ichan=0; Ichan < nchan; Ichan++) {
       //loop over each new sample
@@ -60,59 +55,71 @@ class EEG_Processing_User {
         FFT_freq_Hz = fftData[Ichan].indexToFreq(Ibin);
         FFT_value_uV = fftData[Ichan].getBand(Ibin);
 
-        boolean within_hz_range = (FFT_freq_Hz > 8 && FFT_freq_Hz < 15);
+        boolean within_hz_range = (FFT_freq_Hz > 8 && FFT_freq_Hz < 13);
+//        println(Ibin + " " + within_hz_range);
 
         //add your processing here...
-        if (Ichan == alpha_left_first || Ichan == alpha_right_first || Ichan == alpha_left_second || Ichan == alpha_right_second) {
-          if (Ichan == alpha_left_first && within_hz_range) {
-//            println(Ichan + " " + Ibin + " " + arr.size());
-            if (arr.size() > Ibin) {
-              float[] el = arr.get(Ibin);
-              el[0] = FFT_value_uV;
-              arr.set(Ibin, el);
-            } else {
-              float[] el = {FFT_value_uV,0};
-//              arr.ensureCapacity(Ibin + 1);
-//              println(arr.size());
-              arr.add(el);
-            }
-          }
-          if (Ichan == alpha_right_first && within_hz_range) {
-//            println(Ichan + " " + Ibin + " " + arr.size());
-            if (arr.size() > Ibin) {
-              float[] el = arr.get(Ibin);
-              el[1] = FFT_value_uV;
-              for (int i=0; i < Ibin; i++) {
-                try {
-                  arr.get(i);
-                } catch ( IndexOutOfBoundsException e ) {
-                  float[] temp = {0,0};
-                  arr.add(temp);
-                }
-              }
-              arr.add(el);
-            } else {
-              float[] el = {0,FFT_value_uV};
-//              arr.ensureCapacity(Ibin+1);
-//              println(arr.size());
-              for (int i=0; i < Ibin; i++) {
-                try {
-                  arr.get(i);
-                } catch ( IndexOutOfBoundsException e ) {
-                  float[] temp = {0,0};
-                  arr.add(temp);
-                }
-              }
-              arr.add(el);
-            }
-          }
 
-//          if (arr.size() > Ibin) { println("Element[" + Ibin + "] = " + Arrays.toString(arr.get(Ibin))); }
+        if ( (Ichan == alpha_left_first || Ichan == alpha_right_first) && within_hz_range ) {
+
+          if (list.size() > Ibin) {
+            float[] el = list.get(Ibin);
+            if (Ichan == alpha_left_first)  { el[0] = FFT_value_uV; }
+            if (Ichan == alpha_right_first) { el[1] = FFT_value_uV; }
+            for (int i=0; i < Ibin; i++) {
+              try {
+                list.get(i);
+              } catch ( IndexOutOfBoundsException e ) {
+                float[] temp = {0,0};
+                list.add(temp);
+              }
+            }
+            list.add(el);
+          } else {
+            float[] el = {0,0};
+            if (Ichan == alpha_left_first)  { el[0] = FFT_value_uV; }
+            if (Ichan == alpha_right_first) { el[1] = FFT_value_uV; }
+            for (int i=0; i < Ibin; i++) {
+              try {
+                list.get(i);
+              } catch ( IndexOutOfBoundsException e ) {
+                float[] temp = {0,0};
+                list.add(temp);
+              }
+            }
+            list.add(el);
+          }
         }
       }
     }
+
+    float[][] arr = new float[list.size()][];
+    arr = list.toArray(arr);
+    float[] diffArr = new float[list.size()];
+
+    for (int i=0; i<list.size(); i++) {
+      diffArr[i] = arr[i][1]-arr[i][0];
+    }
     
-    println(Arrays.deepToString(arr.toArray()));
+    int count = 0;
+    float total = 0;
+    float average = 0;
+    
+    for (int i=0; i<diffArr.length; i++) {
+      if (diffArr[i] != 0) {
+        count += 1;
+        total += diffArr[i];
+      }
+    }
+    
+    average = total / count;
+    
+    println("");
+    println("DIFFs:");
+    println(Arrays.toString(diffArr));
+    println("");
+    println("Average:");
+    println(average);
   }
 }
 
